@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aprèn Obertures d'Escacs</title>
+<script src="https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #f7f8fa;
+  color: #1a202c;
+  line-height: 1.6;
+}
+
+.api-notice {
+  background: #ebf8ff;
+  color: #2b6cb0;
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  border-bottom: 1px solid #bee3f8;
+}
+.api-notice a { color: #2b6cb0; font-weight: 600; }
+
+header {
+  position: relative;
+  background: #1a365d;
+  color: white;
+  padding: 32px 24px 28px;
+  text-align: center;
+}
+header .back:hover { color: #fff; }
+header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 4px; }
+header p { font-size: 1rem; opacity: 0.85; }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.tab-btn {
+  padding: 8px 20px;
+  border: 2px solid #cbd5e0;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  color: #4a5568;
+}
+.tab-btn:hover { border-color: #1a365d; color: #1a365d; }
+.tab-btn.active { background: #1a365d; color: white; border-color: #1a365d; }
+
+/* Grid */
+.openings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.opening-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.opening-card:hover { border-color: #1a365d; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.opening-card.active { border-color: #1a365d; background: #ebf4ff; box-shadow: 0 0 0 3px rgba(26,54,93,0.15); }
+
+.opening-card .name { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+.opening-card .moves { font-size: 0.85rem; color: #718096; font-family: monospace; margin-bottom: 8px; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+}
+.badge.principiant { background: #38a169; }
+.badge.intermedi { background: #dd6b20; }
+.badge.avancat { background: #c53030; }
+
+/* Detail Panel */
+.detail-panel {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.5s ease, opacity 0.4s ease, margin 0.4s ease;
+  margin-bottom: 0;
+}
+.detail-panel.open {
+  max-height: 5000px;
+  opacity: 1;
+  margin-bottom: 28px;
+}
+
+.detail-header {
+  background: #1a365d;
+  color: white;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.detail-header h2 { font-size: 1.3rem; }
+.detail-header .close-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.detail-header .close-btn:hover { background: rgba(255,255,255,0.35); }
+
+.detail-body { padding: 24px; }
+
+.embeds-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+@media (max-width: 768px) {
+  .embeds-row { grid-template-columns: 1fr; }
+  header h1 { font-size: 1.4rem; }
+}
+
+.embed-block h3 {
+  font-size: 0.9rem;
+  color: #4a5568;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+/* Chess board */
+.chess-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  aspect-ratio: 1;
+  border: 2px solid #1a365d;
+  border-radius: 6px;
+  overflow: hidden;
+  max-width: 400px;
+}
+.chess-sq {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  position: relative;
+}
+.chess-sq svg {
+  width: 85%;
+  height: 85%;
+}
+.chess-sq.light { background: #f0d9b5; }
+.chess-sq.dark { background: #b58863; }
+.chess-sq.highlight { box-shadow: inset 0 0 0 3px rgba(255, 255, 0, 0.6); }
+
+/* Video links */
+.video-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.video-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: #f7f8fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #1a202c;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.video-link:hover { background: #edf2f7; border-color: #cbd5e0; transform: translateX(3px); }
+.video-link .vico {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.video-link .vlabel { font-size: 0.78rem; color: #718096; }
+
+.external-links {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.ext-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #edf2f7;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #1a365d;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+.ext-link:hover { background: #e2e8f0; }
+
+.ai-section { border-top: 1px solid #e2e8f0; padding-top: 20px; }
+.ai-section h3 { font-size: 1rem; color: #1a365d; margin-bottom: 12px; }
+
+.ai-content {
+  background: #f7f8fa;
+  border-radius: 10px;
+  padding: 20px;
+  min-height: 80px;
+  white-space: pre-wrap;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.7;
+  color: #2d3748;
+}
+
+.spinner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #718096;
+  font-size: 0.9rem;
+}
+.spinner::before {
+  content: '';
+  width: 20px; height: 20px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #1a365d;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.ai-error { color: #c53030; font-size: 0.88rem; }
+
+.pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  background: linear-gradient(135deg, #c53030, #9b2c2c);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 16px;
+}
+.pdf-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(197,48,48,0.35); }
+.pdf-btn:active { transform: scale(0.97); }
+.pdf-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+.pdf-btn .pdf-ico { font-size: 1.2rem; }
+</style>
+</head>
+<body>
+
+
+<header>
+  <a class="back" data-local="http://localhost:8080" data-remote="/" href="/" style="position:absolute;left:24px;top:24px;color:rgba(255,255,255,.8);text-decoration:none;font-size:.9rem;font-weight:600;">&larr; Apps XRoig</a>
+  <h1>Aprèn Obertures d'Escacs</h1>
+  <p>Explora les obertures clàssiques amb explicacions generades per IA</p>
+</header>
+
+<div class="container">
+  <div class="tabs" id="tabs"></div>
+  <div class="openings-grid" id="grid"></div>
+  <div class="detail-panel" id="detail"></div>
+</div>
+
+<script>
+// ============================================================
+const ANTHROPIC_API_KEY = "POSAR_API_KEY_AQUI";
+// ============================================================
+
+const OPENINGS = [
+  { id:"rei",         name:"Obertura del Rei",          moves:"1.e4 e5",                          level:"principiant",
+    fen:"rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR",           lastMove:["e7","e5"],
+    pgn:"1.e4 e5",             chesscom:"Kings-Pawn-Opening" },
+  { id:"londres",     name:"Sistema de Londres",        moves:"1.d4 d5 2.Cf3 Cf6 3.Af4",          level:"principiant",
+    fen:"rnbqkb1r/ppp1pppp/5n2/3p4/3P1B2/5N2/PPP1PPPP/RN1QKB1R",     lastMove:["c1","f4"],
+    pgn:"1.d4 d5 2.Nf3 Nf6 3.Bf4", chesscom:"London-System" },
+  { id:"italiana",    name:"Obertura Italiana",          moves:"1.e4 e5 2.Cf3 Cc6 3.Ac4",          level:"principiant",
+    fen:"r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R",     lastMove:["f1","c4"],
+    pgn:"1.e4 e5 2.Nf3 Nc6 3.Bc4", chesscom:"Italian-Game" },
+  { id:"escandinava", name:"Defensa Escandinava",       moves:"1.e4 d5",                          level:"principiant",
+    fen:"rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR",           lastMove:["d7","d5"],
+    pgn:"1.e4 d5",             chesscom:"Scandinavian-Defense" },
+  { id:"francesa",    name:"Defensa Francesa",           moves:"1.e4 e6 2.d4 d5",                  level:"intermedi",
+    fen:"rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/8/PPP2PPP/RNBQKBNR",         lastMove:["d7","d5"],
+    pgn:"1.e4 e6 2.d4 d5",    chesscom:"French-Defense" },
+  { id:"carokann",    name:"Defensa Caro-Kann",          moves:"1.e4 c6 2.d4 d5",                  level:"intermedi",
+    fen:"rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR",         lastMove:["d7","d5"],
+    pgn:"1.e4 c6 2.d4 d5",    chesscom:"Caro-Kann-Defense" },
+  { id:"gambitdama",  name:"Gambit de Dama",             moves:"1.d4 d5 2.c4",                     level:"intermedi",
+    fen:"rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR",           lastMove:["c2","c4"],
+    pgn:"1.d4 d5 2.c4",       chesscom:"Queens-Gambit" },
+  { id:"indiarei",    name:"Defensa Índia del Rei",      moves:"1.d4 Cf6 2.c4 g6 3.Cc3 Ag7",      level:"intermedi",
+    fen:"rnbqk2r/ppppppbp/5np1/8/2PP4/2N5/PP2PPPP/R1BQKBNR",         lastMove:["f8","g7"],
+    pgn:"1.d4 Nf6 2.c4 g6 3.Nc3 Bg7", chesscom:"Kings-Indian-Defense" },
+  { id:"siciliana",   name:"Defensa Siciliana",          moves:"1.e4 c5",                          level:"avancat",
+    fen:"rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR",           lastMove:["c7","c5"],
+    pgn:"1.e4 c5",            chesscom:"Sicilian-Defense" },
+  { id:"ruylopez",    name:"Ruy López",                  moves:"1.e4 e5 2.Cf3 Cc6 3.Ab5",          level:"avancat",
+    fen:"r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R",     lastMove:["f1","b5"],
+    pgn:"1.e4 e5 2.Nf3 Nc6 3.Bb5", chesscom:"Ruy-Lopez-Opening" },
+  { id:"grunfeld",    name:"Defensa Grünfeld",           moves:"1.d4 Cf6 2.c4 g6 3.Cc3 d5",       level:"avancat",
+    fen:"rnbqkb1r/ppp1pp1p/5np1/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR",     lastMove:["d7","d5"],
+    pgn:"1.d4 Nf6 2.c4 g6 3.Nc3 d5", chesscom:"Grunfeld-Defense" },
+  { id:"nimzo",       name:"Defensa Nimzo-Índia",        moves:"1.d4 Cf6 2.c4 e6 3.Cc3 Ab4",      level:"avancat",
+    fen:"rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2N5/PP2PPPP/R1BQKBNR",       lastMove:["f8","b4"],
+    pgn:"1.d4 Nf6 2.c4 e6 3.Nc3 Bb4", chesscom:"Nimzo-Indian-Defense" },
+];
+
+const LEVEL_LABELS = { principiant: "Principiant", intermedi: "Intermedi", avancat: "Avançat" };
+const FILTERS = ["totes","principiant","intermedi","avancat"];
+const FILTER_LABELS = { totes:"Totes", principiant:"Principiant", intermedi:"Intermedi", avancat:"Avançat" };
+
+// SVG chess pieces (Wikimedia Commons cburnett style, public domain)
+const PIECE_SVG = {
+  'K': `<svg viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 11.63V6M20 8h5" stroke-linejoin="miter"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#fff" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-3.5-7.5-13-10.5-16-4-3 6 5 10 5 10V37z" fill="#fff"/><path d="M11.5 30c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0"/></g></svg>`,
+  'Q': `<svg viewBox="0 0 45 45"><g fill="#fff" fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0zm16.5-4.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0zm-16 0a2 2 0 1 1-4 0 2 2 0 1 1 4 0zm32 0a2 2 0 1 1-4 0 2 2 0 1 1 4 0zm-16 0a2 2 0 1 1-4 0 2 2 0 1 1 4 0z"/><path d="M9 26c8.5-1.5 21-1.5 27 0l2-12-7 11V11l-5.5 13.5-3-15-3 15L14 11v14L7 14l2 12z" stroke-linecap="butt"/><path d="M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z" stroke-linecap="butt"/><path d="M11.5 30c3.5-1 18.5-1 22 0M12 33.5c6-1 15-1 21 0" fill="none"/></g></svg>`,
+  'R': `<svg viewBox="0 0 45 45"><g fill="#fff" fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 39h27v-3H9v3zm3-3v-4h21v4H12zm-1-22V9h4v2h5V9h5v2h5V9h4v5" stroke-linecap="butt"/><path d="M34 14l-3 3H14l-3-3"/><path d="M15 17v7h15v-7" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M14 29.5v-13h17v13H14z" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M14 29.5H31" stroke-linejoin="miter"/><path d="M12 31.5h21v2.5H12v-2.5z" stroke-linejoin="miter"/></g></svg>`,
+  'B': `<svg viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><g fill="#fff" stroke-linecap="butt"><path d="M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.46-13.5-1-3.39 1.46-10.11.03-13.5 1-1.35.49-2.32.47-3-.5 1.35-1.46 3-2 3-2z"/><path d="M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5.5-1.5 6-11.5-5-15.5-11 4-10.5 14-5 15.5 0 0-2.5 1.5-2.5 4 0 0-.5.5 0 2z"/><path d="M25 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 1 1 5 0z"/></g><path d="M17.5 26h10M15 30h15m-7.5-14.5v5M20 18h5" stroke-linejoin="miter"/></g></svg>`,
+  'N': `<svg viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 8-21" fill="#fff"/><path d="M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.042-.94 1.41-3.04 0-3-1 0 .19 1.23-1 2-1 0-4.003 1-4-4 0-2 6-12 6-12s1.89-1.9 2-3.5c-.73-.994-.5-2-.5-3 1-1 3 2.5 3 2.5h2s.78-1.992 2.5-3c1 0 1 3 1 3" fill="#fff"/><path d="M9.5 25.5a.5.5 0 1 1-1 0 .5.5 0 1 1 1 0zm5.01-5.5a.5.5 0 1 1-1 0 .5.5 0 1 1 1 0z" fill="#000"/></g></svg>`,
+  'P': `<svg viewBox="0 0 45 45"><path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03C15.41 27.09 11 31.58 11 39.5H34c0-7.92-4.41-12.41-7.41-13.47C28.06 24.84 29 23.03 29 21c0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  'k': `<svg viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 11.63V6" stroke-linejoin="miter"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#000" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-3.5-7.5-13-10.5-16-4-3 6 5 10 5 10V37z" fill="#000"/><path d="M20 8h5" stroke-linejoin="miter"/><path d="M32 29.5s8.5-4 6.03-9.65C34.15 14 25 18 22.5 24.5l.01 2.1-.01-2.1C20 18 9.906 14 6.997 19.85c-2.497 5.65 4.853 9 4.853 9" stroke="#fff"/><path d="M11.5 30c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0" stroke="#fff"/></g></svg>`,
+  'q': `<svg viewBox="0 0 45 45"><g fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><g fill="#000" stroke="none"><circle cx="6" cy="12" r="2.75"/><circle cx="14" cy="9" r="2.75"/><circle cx="22.5" cy="8" r="2.75"/><circle cx="31" cy="9" r="2.75"/><circle cx="39" cy="12" r="2.75"/></g><path d="M9 26c8.5-1.5 21-1.5 27 0l2.5-12.5L31 25l-.3-14.1-5.2 13.6-3-14.5-3 14.5-5.2-13.6L14 25 6.5 13.5 9 26z" fill="#000" stroke-linecap="butt"/><path d="M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z" fill="#000" stroke-linecap="butt"/><path d="M11 38.5a35 35 1 0 0 23 0" fill="none" stroke-linecap="butt"/><path d="M11 29a35 35 1 0 1 23 0" fill="none" stroke="#fff"/><path d="M12.5 31.5h20" fill="none" stroke="#fff"/><path d="M11.5 34.5a35 35 1 0 0 22 0" fill="none" stroke="#fff"/><path d="M10.5 37.5a35 35 1 0 0 24 0" fill="none" stroke="#fff"/></g></svg>`,
+  'r': `<svg viewBox="0 0 45 45"><g fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 39h27v-3H9v3zm3.5-7l1.5-2.5h17l1.5 2.5h-20zm-.5 4v-4h21v4H12z" stroke-linecap="butt" fill="#000"/><path d="M14 29.5v-13h17v13H14z" stroke-linecap="butt" stroke-linejoin="miter" fill="#000"/><path d="M14 16.5L11 14h23l-3 2.5H14z" stroke-linecap="butt" fill="#000"/><path d="M11 14V9h4v2h5V9h5v2h5V9h4v5H11z" stroke-linecap="butt" fill="#000"/><path d="M12 35.5h21m-20-4h19m-18-2h17m-17-13h17M11 14h23" fill="none" stroke="#fff" stroke-width="1" stroke-linejoin="miter"/></g></svg>`,
+  'b': `<svg viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><g fill="#000" stroke-linecap="butt"><path d="M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.46-13.5-1-3.39 1.46-10.11.03-13.5 1-1.35.49-2.32.47-3-.5 1.35-1.46 3-2 3-2z"/><path d="M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5.5-1.5 6-11.5-5-15.5-11 4-10.5 14-5 15.5 0 0-2.5 1.5-2.5 4 0 0-.5.5 0 2z"/><path d="M25 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 1 1 5 0z"/></g><path d="M17.5 26h10M15 30h15m-7.5-14.5v5M20 18h5" stroke="#fff" stroke-linejoin="miter"/></g></svg>`,
+  'n': `<svg viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 8-21" fill="#000"/><path d="M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.042-.94 1.41-3.04 0-3-1 0 .19 1.23-1 2-1 0-4.003 1-4-4 0-2 6-12 6-12s1.89-1.9 2-3.5c-.73-.994-.5-2-.5-3 1-1 3 2.5 3 2.5h2s.78-1.992 2.5-3c1 0 1 3 1 3" fill="#000"/><path d="M9.5 25.5a.5.5 0 1 1-1 0 .5.5 0 1 1 1 0zm5.01-5.5a.5.5 0 1 1-1 0 .5.5 0 1 1 1 0z" fill="#fff" stroke="#fff"/></g></svg>`,
+  'p': `<svg viewBox="0 0 45 45"><path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03C15.41 27.09 11 31.58 11 39.5H34c0-7.92-4.41-12.41-7.41-13.47C28.06 24.84 29 23.03 29 21c0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#000" stroke="#000" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+};
+
+let activeFilter = "totes";
+let activeOpening = null;
+let aiCache = {};
+let currentAbort = null;
+
+// --- Chess board renderer ---
+function renderBoard(fen, lastMove) {
+  const rows = fen.split('/');
+  let html = '';
+  const lmSquares = lastMove ? lastMove.map(sq => {
+    const col = sq.charCodeAt(0) - 97; // a=0
+    const row = 8 - parseInt(sq[1]);    // 8=0, 1=7
+    return row * 8 + col;
+  }) : [];
+
+  for (let r = 0; r < 8; r++) {
+    let col = 0;
+    for (const ch of rows[r]) {
+      if (ch >= '1' && ch <= '8') {
+        for (let i = 0; i < parseInt(ch); i++) {
+          const idx = r * 8 + col;
+          const isLight = (r + col) % 2 === 0;
+          const hl = lmSquares.includes(idx) ? ' highlight' : '';
+          html += `<div class="chess-sq ${isLight ? 'light' : 'dark'}${hl}"></div>`;
+          col++;
+        }
+      } else {
+        const idx = r * 8 + col;
+        const isLight = (r + col) % 2 === 0;
+        const hl = lmSquares.includes(idx) ? ' highlight' : '';
+        html += `<div class="chess-sq ${isLight ? 'light' : 'dark'}${hl}">${PIECE_SVG[ch] || ''}</div>`;
+        col++;
+      }
+    }
+  }
+  return `<div class="chess-board">${html}</div>`;
+}
+
+// --- Render tabs ---
+const tabsEl = document.getElementById("tabs");
+FILTERS.forEach(f => {
+  const btn = document.createElement("button");
+  btn.className = "tab-btn" + (f === activeFilter ? " active" : "");
+  btn.textContent = FILTER_LABELS[f];
+  btn.onclick = () => {
+    activeFilter = f;
+    renderTabs();
+    renderGrid();
+  };
+  tabsEl.appendChild(btn);
+});
+
+function renderTabs() {
+  tabsEl.querySelectorAll(".tab-btn").forEach((btn, i) => {
+    btn.classList.toggle("active", FILTERS[i] === activeFilter);
+  });
+}
+
+// --- Render grid ---
+const gridEl = document.getElementById("grid");
+function renderGrid() {
+  gridEl.innerHTML = "";
+  const filtered = activeFilter === "totes" ? OPENINGS : OPENINGS.filter(o => o.level === activeFilter);
+  filtered.forEach(o => {
+    const card = document.createElement("div");
+    card.className = "opening-card" + (activeOpening === o.id ? " active" : "");
+    card.innerHTML = `
+      <div class="name">${o.name}</div>
+      <div class="moves">${o.moves}</div>
+      <span class="badge ${o.level}">${LEVEL_LABELS[o.level]}</span>
+    `;
+    card.onclick = () => selectOpening(o);
+    gridEl.appendChild(card);
+  });
+}
+
+// --- Detail panel ---
+const detailEl = document.getElementById("detail");
+
+function selectOpening(o) {
+  if (activeOpening === o.id) {
+    closePanel();
+    return;
+  }
+  activeOpening = o.id;
+  renderGrid();
+
+  const encodedPgn = encodeURIComponent(o.pgn);
+  const lichessUrl = `https://lichess.org/analysis/pgn/${encodedPgn}`;
+  const chesscomUrl = `https://www.chess.com/openings/${o.chesscom}`;
+  const ytSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(o.name + ' chess opening')}`;
+
+  detailEl.innerHTML = `
+    <div class="detail-header">
+      <div>
+        <h2>${o.name}</h2>
+        <span class="badge ${o.level}" style="margin-top:6px;">${LEVEL_LABELS[o.level]}</span>
+      </div>
+      <button class="close-btn" onclick="closePanel()" title="Tanca">&times;</button>
+    </div>
+    <div class="detail-body">
+      <div class="embeds-row">
+        <div class="embed-block">
+          <h3>Posició resultant</h3>
+          ${renderBoard(o.fen, o.lastMove)}
+          <div style="margin-top:8px;font-size:0.82rem;color:#718096;font-family:monospace;">${o.moves}</div>
+        </div>
+        <div class="embed-block">
+          <h3>Recursos externs</h3>
+          <div class="video-links">
+            <a class="video-link" href="${lichessUrl}" target="_blank" rel="noopener">
+              <span class="vico">&#9822;</span>
+              <div>Analitza a Lichess<br><span class="vlabel">Obre el tauler interactiu amb els moviments</span></div>
+            </a>
+            <a class="video-link" href="${chesscomUrl}" target="_blank" rel="noopener">
+              <span class="vico">&#9816;</span>
+              <div>Explora a Chess.com<br><span class="vlabel">Teoria, estadístiques i partides</span></div>
+            </a>
+            <a class="video-link" href="${ytSearch}" target="_blank" rel="noopener">
+              <span class="vico">&#9654;</span>
+              <div>Vídeos a YouTube<br><span class="vlabel">Cerca tutorials i explicacions</span></div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="ai-section">
+        <h3>Explicació de la IA</h3>
+        <div class="ai-content" id="ai-content">
+          <div class="spinner">Generant explicació...</div>
+        </div>
+      </div>
+      <button class="pdf-btn" onclick="generatePDF('${o.id}')" id="pdf-btn">
+        <span class="pdf-ico">&#128196;</span> Descarrega Fitxa PDF
+      </button>
+    </div>
+  `;
+  detailEl.classList.add("open");
+  detailEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+  fetchAI(o);
+}
+
+function closePanel() {
+  activeOpening = null;
+  detailEl.classList.remove("open");
+  renderGrid();
+  if (currentAbort) { currentAbort.abort(); currentAbort = null; }
+}
+
+// --- AI ---
+async function fetchAI(o) {
+  const el = document.getElementById("ai-content");
+  if (!el) return;
+
+  if (aiCache[o.id]) {
+    el.textContent = aiCache[o.id];
+    return;
+  }
+
+  if (!ANTHROPIC_API_KEY || ANTHROPIC_API_KEY === "POSA_LA_TEVA_CLAU_AQUI") {
+    el.innerHTML = '<span class="ai-error">Configura la teva clau API d\'Anthropic al fitxer.</span>';
+    return;
+  }
+
+  if (currentAbort) currentAbort.abort();
+  currentAbort = new AbortController();
+
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1024,
+        system: "Ets un professor d'escacs expert i didàctic. Respon sempre en català. Quan t'expliquin una obertura, dona una explicació estructurada amb: 1) La idea principal en 2-3 frases simples, 2) Els objectius estratègics, 3) Les trampes típiques per al principiant, 4) Una frase de motivació final. Usa format clar amb seccions però sense markdown excessiu.",
+        messages: [{ role: "user", content: `Explica'm l'obertura ${o.name} amb els moviments ${o.moves}. Sóc un jugador novell.` }],
+        stream: true
+      }),
+      signal: currentAbort.signal
+    });
+
+    if (!resp.ok) {
+      const err = await resp.text();
+      el.innerHTML = `<span class="ai-error">Error de l'API (${resp.status}): ${err}</span>`;
+      return;
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+    el.textContent = "";
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split("\n");
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const data = line.slice(6).trim();
+        if (data === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.type === "content_block_delta" && parsed.delta?.text) {
+            fullText += parsed.delta.text;
+            el.textContent = fullText;
+          }
+        } catch {}
+      }
+    }
+    aiCache[o.id] = fullText;
+
+  } catch (err) {
+    if (err.name === "AbortError") return;
+    el.innerHTML = `<span class="ai-error">Error de connexió: ${err.message}</span>`;
+  }
+}
+
+// --- PDF generation ---
+async function generatePDF(openingId) {
+  const o = OPENINGS.find(x => x.id === openingId);
+  if (!o) return;
+
+  const btn = document.getElementById("pdf-btn");
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="pdf-ico">&#9203;</span> Generant PDF...'; }
+
+  try {
+    if (!window.jspdf) throw new Error("La llibreria jsPDF no s'ha carregat. Recarrega la pagina (Ctrl+Shift+R).");
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W = 210, H = 297;
+    const ML = 20, MR = 20, MT = 20;
+    const CW = W - ML - MR;
+    let y = MT;
+
+    // --- Colors ---
+    const NAVY = [26, 54, 93];
+    const DARK = [30, 30, 40];
+    const GRAY = [100, 110, 130];
+    const LIGHT_BG = [245, 246, 250];
+    const levelColors = { principiant: [56,161,105], intermedi: [221,107,32], avancat: [197,48,48] };
+
+    // --- Helper: rounded rect ---
+    function roundRect(x, y, w, h, r, fillColor) {
+      doc.setFillColor(...fillColor);
+      doc.roundedRect(x, y, w, h, r, r, 'F');
+    }
+
+    // --- Helper: clean text for jsPDF (no unicode issues) ---
+    function cleanForPDF(text) {
+      return text
+        // Replace typographic chars with ASCII equivalents
+        .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
+        .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+        .replace(/\u2013/g, '-')
+        .replace(/\u2014/g, '-')
+        .replace(/\u2026/g, '...')
+        .replace(/\u00A0/g, ' ')
+        // Remove emoji and special symbols (original)
+        .replace(/[\u2728\u2694\u2713\u2714\u2022\u25CF\u25CB\u2605\u2606\u270F\u2764\u2B50\u26A0\u2139\u27A1\u2192\u2190\u2191\u2193]/g, '')
+        .replace(/\ud83c[\udc00-\udfff]|\ud83d[\udc00-\udeff]|\ud83e[\udc00-\udfff]/g, '')
+        .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
+        // Strip ALL remaining non-Latin-1 characters (jsPDF Helvetica only supports U+0000-U+00FF)
+        .replace(/[^\x00-\xFF]/g, '')
+        .trim();
+    }
+
+    // --- Helper: render rich text with bold (**text**) support ---
+    function renderRichText(rawText, startX, maxW, fontSize, color, lineH) {
+      const cleaned = cleanForPDF(rawText);
+      // Split into lines first
+      const rawLines = cleaned.split('\n');
+      const lh = lineH || fontSize * 0.45;
+
+      for (const rawLine of rawLines) {
+        if (!rawLine.trim()) { y += lh * 0.5; continue; }
+
+        // Parse **bold** segments: split line into [{text, bold}]
+        const segments = [];
+        const re = /\*\*(.+?)\*\*/g;
+        let lastIdx = 0, m;
+        while ((m = re.exec(rawLine)) !== null) {
+          if (m.index > lastIdx) segments.push({ text: rawLine.slice(lastIdx, m.index), bold: false });
+          segments.push({ text: m[1], bold: true });
+          lastIdx = m.index + m[0].length;
+        }
+        if (lastIdx < rawLine.length) segments.push({ text: rawLine.slice(lastIdx), bold: false });
+
+        // Replace bullet chars with dash (expanded detection)
+        if (segments.length && /^[\s]*[-•◦▸▪▶◆‣⁃○●*]/.test(segments[0].text)) {
+          segments[0].text = segments[0].text.replace(/^[\s]*[-•◦▸▪▶◆‣⁃○●*]\s*/, '  - ');
+        }
+
+        // Flatten segments into wrapped lines, tracking bold ranges
+        const fullText = segments.map(s => s.text).join('');
+        const wrappedLines = doc.splitTextToSize(fullText, maxW);
+
+        // Build a map: character index -> bold?
+        const boldMap = [];
+        let ci = 0;
+        for (const seg of segments) {
+          for (let i = 0; i < seg.text.length; i++) {
+            boldMap[ci++] = seg.bold;
+          }
+        }
+
+        let charOffset = 0;
+        for (const wLine of wrappedLines) {
+          if (y > H - 20) { doc.addPage(); y = MT; }
+
+          // Find segments within this wrapped line
+          const lineSegs = [];
+          let pos = 0;
+          let currentBold = boldMap[charOffset] || false;
+          let currentText = '';
+
+          for (let i = 0; i < wLine.length; i++) {
+            const b = boldMap[charOffset + i] || false;
+            if (b !== currentBold) {
+              if (currentText) lineSegs.push({ text: currentText, bold: currentBold });
+              currentText = wLine[i];
+              currentBold = b;
+            } else {
+              currentText += wLine[i];
+            }
+          }
+          if (currentText) lineSegs.push({ text: currentText, bold: currentBold });
+
+          // Render segments inline
+          let cx = startX;
+          for (const seg of lineSegs) {
+            doc.setFont('helvetica', seg.bold ? 'bold' : 'normal');
+            doc.setFontSize(fontSize);
+            doc.setTextColor(...color);
+            doc.text(seg.text, cx, y);
+            cx += doc.getTextWidth(seg.text);
+          }
+
+          charOffset += wLine.length;
+          // skip whitespace that was used as line break
+          while (charOffset < boldMap.length && fullText[charOffset] === ' ') charOffset++;
+          y += lh;
+        }
+      }
+      return y;
+    }
+
+    // ============================================================
+    // HEADER BAR
+    // ============================================================
+    roundRect(0, 0, W, 42, 0, NAVY);
+
+    // Chess icon (use safe char)
+    doc.setFontSize(14);
+    doc.setTextColor(255, 215, 0);
+    doc.text('*', ML + 2, 17);
+
+    // Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.text("FITXA D'OBERTURA", ML + 14, 17);
+
+    // Subtitle
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(200, 210, 230);
+    doc.text("Apren Obertures d'Escacs - Material Didactic", ML + 14, 25);
+
+    // Opening name
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(255, 215, 0);
+    doc.text(o.name, ML, 37);
+
+    // Level badge
+    const lvlColor = levelColors[o.level] || GRAY;
+    const lvlText = LEVEL_LABELS[o.level];
+    const lvlW = doc.getTextWidth(lvlText) + 10;
+    roundRect(W - MR - lvlW - 2, 30, lvlW + 4, 9, 3, lvlColor);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text(lvlText, W - MR - lvlW + 3, 36.5);
+
+    y = 52;
+
+    // ============================================================
+    // CHESS BOARD (captured from DOM)
+    // ============================================================
+    const boardEl = document.querySelector('.chess-board');
+    let boardImgData = null;
+    if (boardEl) {
+      try {
+        const canvas = await html2canvas(boardEl, { scale: 5, backgroundColor: null, useCORS: true });
+        boardImgData = canvas.toDataURL('image/png');
+      } catch (e) {
+        console.warn('Board capture failed:', e);
+      }
+    }
+
+    const boardSize = 72;
+    const boardX = ML;
+    const infoX = ML + boardSize + 12;
+    const infoW = CW - boardSize - 12;
+
+    if (boardImgData) {
+      // Board border
+      doc.setDrawColor(...NAVY);
+      doc.setLineWidth(0.5);
+      doc.rect(boardX - 0.5, y - 0.5, boardSize + 1, boardSize + 1);
+      doc.addImage(boardImgData, 'PNG', boardX, y, boardSize, boardSize);
+    }
+
+    // ============================================================
+    // INFO SIDEBAR (right of board)
+    // ============================================================
+    let iy = y + 2;
+
+    // Moviments section
+    roundRect(infoX, iy, infoW, 28, 4, LIGHT_BG);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...NAVY);
+    doc.text('MOVIMENTS', infoX + 6, iy + 7);
+
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(...DARK);
+    doc.text(o.moves, infoX + 6, iy + 18);
+
+    iy += 34;
+
+    // Level & category
+    roundRect(infoX, iy, infoW, 22, 4, LIGHT_BG);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...NAVY);
+    doc.text('NIVELL', infoX + 6, iy + 7);
+
+    doc.setFontSize(11);
+    doc.setTextColor(...lvlColor);
+    doc.text(lvlText, infoX + 6, iy + 16);
+
+    // Difficulty dots
+    const dots = o.level === 'principiant' ? 1 : o.level === 'intermedi' ? 2 : 3;
+    for (let i = 0; i < 3; i++) {
+      const dotColor = i < dots ? lvlColor : [210, 215, 225];
+      doc.setFillColor(...dotColor);
+      doc.circle(infoX + 45 + i * 8, iy + 14, 2.5, 'F');
+    }
+
+    iy += 28;
+
+    // Resources box
+    roundRect(infoX, iy, infoW, 28, 4, LIGHT_BG);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...NAVY);
+    doc.text('RECURSOS EN LINIA', infoX + 6, iy + 7);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(50, 100, 180);
+
+    const encodedPgn = encodeURIComponent(o.pgn);
+    const lichessUrl = `lichess.org/analysis/pgn/${encodedPgn}`;
+    const chesscomUrl = `chess.com/openings/${o.chesscom}`;
+    doc.textWithLink('Lichess - Analitza interactivament', infoX + 6, iy + 14, { url: `https://${lichessUrl}` });
+    doc.textWithLink('Chess.com - Teoria i estadistiques', infoX + 6, iy + 20, { url: `https://${chesscomUrl}` });
+
+    y = Math.max(y + boardSize + 8, iy + 36);
+
+    // ============================================================
+    // DECORATIVE SEPARATOR
+    // ============================================================
+    doc.setDrawColor(...NAVY);
+    doc.setLineWidth(0.8);
+    doc.line(ML, y, ML + CW, y);
+    y += 8;
+
+    // ============================================================
+    // AI EXPLANATION SECTION
+    // ============================================================
+    // Section header
+    roundRect(ML, y, CW, 10, 3, NAVY);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(255, 255, 255);
+    doc.text('EXPLICACIO DIDACTICA', ML + 6, y + 7);
+    y += 16;
+
+    // AI content (with bold markdown support)
+    const aiText = aiCache[o.id] || "(Genera l'explicacio prement sobre l'obertura i espera que finalitzi la IA abans de descarregar el PDF)";
+    y = renderRichText(aiText, ML + 2, CW - 4, 10, DARK, 5);
+
+    y += 8;
+
+    // ============================================================
+    // KEY CONCEPTS BOX
+    // ============================================================
+    if (y < H - 60) {
+      roundRect(ML, y, CW, 10, 3, [245, 240, 230]);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(...NAVY);
+      doc.text('CONSELLS PER RECORDAR', ML + 6, y + 7);
+      y += 14;
+
+      const tips = [
+        "Practica els moviments inicials fins que surtin de memoria.",
+        "Entren els plans tipics del mig joc associats a l'obertura.",
+        "Revisa partides de mestres que utilitzen aquesta obertura.",
+        "Analitza les teves partides per detectar errors d'obertura."
+      ];
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      for (const tip of tips) {
+        if (y > H - 20) break;
+        doc.setFillColor(...NAVY);
+        doc.circle(ML + 5, y - 1.2, 1.2, 'F');
+        doc.setTextColor(...DARK);
+        doc.text(tip, ML + 12, y);
+        y += 6;
+      }
+    }
+
+    // ============================================================
+    // FOOTER
+    // ============================================================
+    const footY = H - 12;
+    doc.setDrawColor(200, 205, 215);
+    doc.setLineWidth(0.3);
+    doc.line(ML, footY - 4, ML + CW, footY - 4);
+
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...GRAY);
+    doc.text("Generat des de Apren Obertures d'Escacs - apps.xroig.cat", ML, footY);
+    doc.text(new Date().toLocaleDateString('ca-ES', { year:'numeric', month:'long', day:'numeric' }), W - MR, footY, { align: 'right' });
+
+    // Save
+    doc.save(`obertura_${o.id}.pdf`);
+
+  } catch (err) {
+    console.error('PDF generation error:', err);
+    alert("Error generant el PDF: " + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span class="pdf-ico">&#128196;</span> Descarrega Fitxa PDF'; }
+  }
+}
+
+// Init
+renderGrid();
+
+// Adjust nav links for local vs remote
+(() => {
+    const isLocal = ['localhost','127.0.0.1'].includes(location.hostname);
+    document.querySelectorAll('[data-local][data-remote]').forEach(a => {
+        a.href = isLocal ? a.dataset.local : a.dataset.remote;
+    });
+})();
+</script>
+</body>
+</html>
