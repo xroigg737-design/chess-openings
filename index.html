@@ -300,9 +300,7 @@ header p { font-size: 1rem; opacity: 0.85; }
 </div>
 
 <script>
-// ============================================================
-const ANTHROPIC_API_KEY = "POSAR_API_KEY_AQUI";
-// ============================================================
+// API es crida via backend /api/explain (la clau està al servidor)
 
 const OPENINGS = [
   { id:"rei",         name:"Obertura del Rei",          moves:"1.e4 e5",                          level:"principiant",
@@ -522,23 +520,13 @@ async function fetchAI(o) {
     return;
   }
 
-  if (!ANTHROPIC_API_KEY || ANTHROPIC_API_KEY === "POSA_LA_TEVA_CLAU_AQUI") {
-    el.innerHTML = '<span class="ai-error">Configura la teva clau API d\'Anthropic al fitxer.</span>';
-    return;
-  }
-
   if (currentAbort) currentAbort.abort();
   currentAbort = new AbortController();
 
   try {
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    const resp = await fetch("/api/explain", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         max_tokens: 1024,
