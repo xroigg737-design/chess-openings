@@ -930,8 +930,8 @@ function selectOpening(o) {
           <div class="spinner">Generant explicació...</div>
         </div>
       </div>
-      <button class="pdf-btn" onclick="generatePDF('${o.id}')" id="pdf-btn">
-        <span class="pdf-ico">&#128196;</span> Descarrega Fitxa PDF
+      <button class="pdf-btn" onclick="generatePDF('${o.id}')" id="pdf-btn" disabled>
+        <span class="pdf-ico">&#9203;</span> Esperant explicació de la IA...
       </button>
     </div>
   `;
@@ -961,6 +961,7 @@ async function fetchAI(o) {
 
   if (aiCache[o.id]) {
     el.textContent = aiCache[o.id];
+    enablePdfBtn();
     return;
   }
 
@@ -1015,10 +1016,20 @@ async function fetchAI(o) {
       }
     }
     aiCache[o.id] = fullText;
+    enablePdfBtn();
 
   } catch (err) {
     if (err.name === "AbortError") return;
     el.innerHTML = `<span class="ai-error">Error de connexió: ${err.message}</span>`;
+    enablePdfBtn();
+  }
+}
+
+function enablePdfBtn() {
+  const btn = document.getElementById("pdf-btn");
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="pdf-ico">&#128196;</span> Descarrega Fitxa PDF';
   }
 }
 
@@ -1320,7 +1331,7 @@ renderGrid();
 </script>
 
 <footer style="text-align:center;padding:16px;font-size:0.75rem;color:#a0aec0;border-top:1px solid #e2e8f0;margin-top:32px;">
-  Aprèn Obertures d'Escacs &middot; v1.1 &middot; apps.xroig.cat
+  Aprèn Obertures d'Escacs &middot; v1.2 &middot; apps.xroig.cat
 </footer>
 
 </body>
