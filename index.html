@@ -968,7 +968,7 @@ async function fetchAI(o) {
   currentAbort = new AbortController();
 
   try {
-    const resp = await fetch("/api/explain", {
+    const resp = await fetch("api/explain", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1320,7 +1320,7 @@ renderGrid();
 </script>
 
 <footer style="text-align:center;padding:16px;font-size:0.75rem;color:#a0aec0;border-top:1px solid #e2e8f0;margin-top:32px;">
-  Aprèn Obertures d'Escacs &middot; v1.0 &middot; apps.xroig.cat
+  Aprèn Obertures d'Escacs &middot; v1.1 &middot; apps.xroig.cat
 </footer>
 
 </body>
