@@ -970,7 +970,7 @@ async function fetchAI(o) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-5",
         max_tokens: 1024,
         system: "Ets un professor d'escacs expert i didàctic. Respon sempre en català. Quan t'expliquin una obertura, dona una explicació estructurada amb: 1) La idea principal en 2-3 frases simples, 2) Els objectius estratègics, 3) Les trampes típiques per al principiant, 4) Una frase de motivació final. Usa format clar amb seccions però sense markdown excessiu.",
         messages: [{ role: "user", content: `Explica'm l'obertura ${o.name} amb els moviments ${o.moves}. Sóc un jugador novell.` }],
