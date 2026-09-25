@@ -63,7 +63,7 @@ header p { font-size: 1rem; opacity: 0.85; }
 /* Grid */
 .openings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 14px;
   margin-bottom: 28px;
 }
@@ -74,14 +74,24 @@ header p { font-size: 1rem; opacity: 0.85; }
   border-radius: 12px;
   padding: 16px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  animation: cardIn 0.4s ease both;
 }
 .opening-card:hover { border-color: #1a365d; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 .opening-card.active { border-color: #1a365d; background: #ebf4ff; box-shadow: 0 0 0 3px rgba(26,54,93,0.15); }
 
-.opening-card .name { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
-.opening-card .moves { font-size: 0.85rem; color: #718096; font-family: monospace; margin-bottom: 8px; }
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-info { flex: 1; min-width: 0; }
+.card-info .name { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+.card-info .moves { font-size: 0.85rem; color: #718096; font-family: monospace; margin-bottom: 8px; }
 
 .badge {
   display: inline-block;
@@ -94,6 +104,34 @@ header p { font-size: 1rem; opacity: 0.85; }
 .badge.principiant { background: #38a169; }
 .badge.intermedi { background: #dd6b20; }
 .badge.avancat { background: #c53030; }
+
+/* Mini board */
+.mini-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  width: 96px;
+  height: 96px;
+  border: 1.5px solid #8b7355;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.mini-sq {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  line-height: 1;
+  user-select: none;
+}
+.mini-sq.l { background: #f0d9b5; }
+.mini-sq.d { background: #b58863; }
+
+@media (max-width: 400px) {
+  .mini-board { width: 72px; height: 72px; }
+  .mini-sq { font-size: 7px; }
+  .openings-grid { grid-template-columns: 1fr; }
+}
 
 /* Detail Panel */
 .detail-panel {
@@ -156,6 +194,10 @@ header p { font-size: 1rem; opacity: 0.85; }
 }
 
 /* Chess board */
+.board-wrapper {
+  position: relative;
+  max-width: 400px;
+}
 .chess-board {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
@@ -163,7 +205,6 @@ header p { font-size: 1rem; opacity: 0.85; }
   border: 2px solid #1a365d;
   border-radius: 6px;
   overflow: hidden;
-  max-width: 400px;
 }
 .chess-sq {
   aspect-ratio: 1;
@@ -172,6 +213,7 @@ header p { font-size: 1rem; opacity: 0.85; }
   justify-content: center;
   user-select: none;
   position: relative;
+  transition: background 0.15s;
 }
 .chess-sq svg {
   width: 85%;
@@ -179,7 +221,124 @@ header p { font-size: 1rem; opacity: 0.85; }
 }
 .chess-sq.light { background: #f0d9b5; }
 .chess-sq.dark { background: #b58863; }
-.chess-sq.highlight { box-shadow: inset 0 0 0 3px rgba(255, 255, 0, 0.6); }
+.chess-sq.highlight { box-shadow: inset 0 0 0 3px rgba(255, 255, 0, 0.6); background: rgba(255,255,100,0.35); }
+.chess-sq.light.highlight { background: #f0e68c; }
+.chess-sq.dark.highlight { background: #daa520; }
+
+/* Arrow overlay */
+.arrow-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.arrow-overlay.visible { animation: arrowFadeIn 0.5s ease both; }
+@keyframes arrowFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Player controls */
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  max-width: 400px;
+}
+.ctrl-btn {
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid #cbd5e0;
+  background: white;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  color: #1a365d;
+}
+.ctrl-btn:hover { background: #edf2f7; border-color: #1a365d; }
+.ctrl-btn:active { transform: scale(0.92); }
+.ctrl-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+.ctrl-btn:disabled:hover { background: white; border-color: #cbd5e0; }
+.ctrl-btn.play-btn {
+  background: #1a365d;
+  color: white;
+  border-color: #1a365d;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1rem;
+}
+.ctrl-btn.play-btn:hover { background: #2a4a7f; }
+.step-info {
+  margin-left: auto;
+  font-size: 0.82rem;
+  color: #718096;
+  font-family: monospace;
+}
+
+/* Move list */
+.move-list {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  max-width: 400px;
+}
+.move-badge {
+  padding: 4px 10px;
+  background: #edf2f7;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-family: monospace;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 2px solid transparent;
+  white-space: nowrap;
+}
+.move-badge:hover { background: #e2e8f0; border-color: #cbd5e0; }
+.move-badge.active { background: #1a365d; color: white; border-color: #1a365d; }
+
+/* Arrow legend */
+.arrow-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  max-width: 400px;
+}
+.arrow-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: #4a5568;
+}
+.arrow-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+/* Arrow toggle */
+.arrow-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: #4a5568;
+  cursor: pointer;
+  max-width: 400px;
+}
+.arrow-toggle input { cursor: pointer; }
 
 /* Video links */
 .video-links {
@@ -300,52 +459,161 @@ header p { font-size: 1rem; opacity: 0.85; }
 </div>
 
 <script>
-// API es crida via backend /api/explain (la clau està al servidor)
+const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
 const OPENINGS = [
-  { id:"rei",         name:"Obertura del Rei",          moves:"1.e4 e5",                          level:"principiant",
-    fen:"rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR",           lastMove:["e7","e5"],
-    pgn:"1.e4 e5",             chesscom:"Kings-Pawn-Opening" },
-  { id:"londres",     name:"Sistema de Londres",        moves:"1.d4 d5 2.Cf3 Cf6 3.Af4",          level:"principiant",
-    fen:"rnbqkb1r/ppp1pppp/5n2/3p4/3P1B2/5N2/PPP1PPPP/RN1QKB1R",     lastMove:["c1","f4"],
-    pgn:"1.d4 d5 2.Nf3 Nf6 3.Bf4", chesscom:"London-System" },
-  { id:"italiana",    name:"Obertura Italiana",          moves:"1.e4 e5 2.Cf3 Cc6 3.Ac4",          level:"principiant",
-    fen:"r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R",     lastMove:["f1","c4"],
-    pgn:"1.e4 e5 2.Nf3 Nc6 3.Bc4", chesscom:"Italian-Game" },
-  { id:"escandinava", name:"Defensa Escandinava",       moves:"1.e4 d5",                          level:"principiant",
-    fen:"rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR",           lastMove:["d7","d5"],
-    pgn:"1.e4 d5",             chesscom:"Scandinavian-Defense" },
-  { id:"francesa",    name:"Defensa Francesa",           moves:"1.e4 e6 2.d4 d5",                  level:"intermedi",
-    fen:"rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/8/PPP2PPP/RNBQKBNR",         lastMove:["d7","d5"],
-    pgn:"1.e4 e6 2.d4 d5",    chesscom:"French-Defense" },
-  { id:"carokann",    name:"Defensa Caro-Kann",          moves:"1.e4 c6 2.d4 d5",                  level:"intermedi",
-    fen:"rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR",         lastMove:["d7","d5"],
-    pgn:"1.e4 c6 2.d4 d5",    chesscom:"Caro-Kann-Defense" },
-  { id:"gambitdama",  name:"Gambit de Dama",             moves:"1.d4 d5 2.c4",                     level:"intermedi",
-    fen:"rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR",           lastMove:["c2","c4"],
-    pgn:"1.d4 d5 2.c4",       chesscom:"Queens-Gambit" },
-  { id:"indiarei",    name:"Defensa Índia del Rei",      moves:"1.d4 Cf6 2.c4 g6 3.Cc3 Ag7",      level:"intermedi",
-    fen:"rnbqk2r/ppppppbp/5np1/8/2PP4/2N5/PP2PPPP/R1BQKBNR",         lastMove:["f8","g7"],
-    pgn:"1.d4 Nf6 2.c4 g6 3.Nc3 Bg7", chesscom:"Kings-Indian-Defense" },
-  { id:"siciliana",   name:"Defensa Siciliana",          moves:"1.e4 c5",                          level:"avancat",
-    fen:"rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR",           lastMove:["c7","c5"],
-    pgn:"1.e4 c5",            chesscom:"Sicilian-Defense" },
-  { id:"ruylopez",    name:"Ruy López",                  moves:"1.e4 e5 2.Cf3 Cc6 3.Ab5",          level:"avancat",
-    fen:"r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R",     lastMove:["f1","b5"],
-    pgn:"1.e4 e5 2.Nf3 Nc6 3.Bb5", chesscom:"Ruy-Lopez-Opening" },
-  { id:"grunfeld",    name:"Defensa Grünfeld",           moves:"1.d4 Cf6 2.c4 g6 3.Cc3 d5",       level:"avancat",
-    fen:"rnbqkb1r/ppp1pp1p/5np1/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR",     lastMove:["d7","d5"],
-    pgn:"1.d4 Nf6 2.c4 g6 3.Nc3 d5", chesscom:"Grunfeld-Defense" },
-  { id:"nimzo",       name:"Defensa Nimzo-Índia",        moves:"1.d4 Cf6 2.c4 e6 3.Cc3 Ab4",      level:"avancat",
-    fen:"rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2N5/PP2PPPP/R1BQKBNR",       lastMove:["f8","b4"],
-    pgn:"1.d4 Nf6 2.c4 e6 3.Nc3 Bb4", chesscom:"Nimzo-Indian-Defense" },
+  { id:"rei", name:"Obertura del Rei", moves:"1.e4 e5", level:"principiant",
+    fen:"rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR", lastMove:["e7","e5"],
+    pgn:"1.e4 e5", chesscom:"Kings-Pawn-Opening",
+    steps:[
+      [START_FEN, null, "Posició inicial"],
+      ["rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR","e2e4","1.e4"],
+      ["rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR","e7e5","1...e5"]
+    ],
+    arrows:[["e4","d5","#48bb78","Control de d5"],["e5","d4","#63b3ed","Contrajoc al centre"]]
+  },
+  { id:"londres", name:"Sistema de Londres", moves:"1.d4 d5 2.Cf3 Cf6 3.Af4", level:"principiant",
+    fen:"rnbqkb1r/ppp1pppp/5n2/3p4/3P1B2/5N2/PPP1PPPP/RN1QKB1R", lastMove:["c1","f4"],
+    pgn:"1.d4 d5 2.Nf3 Nf6 3.Bf4", chesscom:"London-System",
+    steps:[
+      [START_FEN, null, "Posició inicial"],
+      ["rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR","d2d4","1.d4"],
+      ["rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR","d7d5","1...d5"],
+      ["rnbqkbnr/ppp1pppp/8/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R","g1f3","2.Cf3"],
+      ["rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R","g8f6","2...Cf6"],
+      ["rnbqkb1r/ppp1pppp/5n2/3p4/3P1B2/5N2/PPP1PPPP/RN1QKB1R","c1f4","3.Af4"]
+    ],
+    arrows:[["f4","e5","#48bb78","Alfil controla e5"],["f3","e5","#63b3ed","Cavall reforça e5"]]
+  },
+  { id:"italiana", name:"Obertura Italiana", moves:"1.e4 e5 2.Cf3 Cc6 3.Ac4", level:"principiant",
+    fen:"r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R", lastMove:["f1","c4"],
+    pgn:"1.e4 e5 2.Nf3 Nc6 3.Bc4", chesscom:"Italian-Game",
+    steps:[
+      [START_FEN, null, "Posició inicial"],
+      ["rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR","e2e4","1.e4"],
+      ["rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR","e7e5","1...e5"],
+      ["rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R","g1f3","2.Cf3"],
+      ["r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R","b8c6","2...Cc6"],
+      ["r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R","f1c4","3.Ac4"]
+    ],
+    arrows:[["c4","f7","#fc8181","Pressió sobre f7"],["f3","e5","#48bb78","Atac al centre"]]
+  },
+  { id:"escandinava", name:"Defensa Escandinava", moves:"1.e4 d5", level:"principiant",
+    fen:"rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR", lastMove:["d7","d5"],
+    pgn:"1.e4 d5", chesscom:"Scandinavian-Defense",
+    steps:[
+      [START_FEN, null, "Posició inicial"],
+      ["rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR","e2e4","1.e4"],
+      ["rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR","d7d5","1...d5"]
+    ],
+    arrows:[["d5","e4","#fc8181","Desafia el centre"]]
+  },
+  { id:"francesa", name:"Defensa Francesa", moves:"1.e4 e6 2.d4 d5", level:"intermedi",
+    fen:"rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/8/PPP2PPP/RNBQKBNR", lastMove:["d7","d5"],
+    pgn:"1.e4 e6 2.d4 d5", chesscom:"French-Defense",
+    steps:[
+      [START_FEN, null, "Posició inicial"],
+      ["rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR","e2e4","1.e4"],
+      ["rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR","e7e6","1...e6"],
+      ["rnbqkbnr/pppp1ppp/4p3/8/3PP3/8/PPP2PPP/RNBQKBNR","d2d4","2.d4"],
+      ["rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/8/PPP2PPP/RNBQKBNR","d7d5","2...d5"]
+    ],
+    arrows:[["d5","e4","#fc8181","Tensió central"],["e6","d5","#63b3ed","Cadena de peons"]]
+  },
+  { id:"carokann", name:"Defensa Caro-Kann", moves:"1.e4 c6 2.d4 d5", level:"intermedi",
+    fen:"rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR", lastMove:["d7","d5"],
+    pgn:"1.e4 c6 2.d4 d5", chesscom:"Caro-Kann-Defense",
+    steps:[
+      [START_FEN, null, "Posició inicial"],
+      ["rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR","e2e4","1.e4"],
+      ["rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR","c7c6","1...c6"],
+      ["rnbqkbnr/pp1ppppp/2p5/8/3PP3/8/PPP2PPP/RNBQKBNR","d2d4","2.d4"],
+      ["rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR","d7d5","2...d5"]
+    ],
+    arrows:[["c6","d5","#63b3ed","Peó suporta d5"],["d5","e4","#fc8181","Pressió al centre"]]
+  },
+  { id:"gambitdama", name:"Gambit de Dama", moves:"1.d4 d5 2.c4", level:"intermedi",
+    fen:"rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR", lastMove:["c2","c4"],
+    pgn:"1.d4 d5 2.c4", chesscom:"Queens-Gambit",
+    steps:[
+      [START_FEN, null, "Posició inicial"],
+      ["rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR","d2d4","1.d4"],
+      ["rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR","d7d5","1...d5"],
+      ["rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR","c2c4","2.c4"]
+    ],
+    arrows:[["c4","d5","#fc8181","Pressiona d5"]]
+  },
+  { id:"indiarei", name:"Defensa Índia del Rei", moves:"1.d4 Cf6 2.c4 g6 3.Cc3 Ag7", level:"intermedi",
+    fen:"rnbqk2r/ppppppbp/5np1/8/2PP4/2N5/PP2PPPP/R1BQKBNR", lastMove:["f8","g7"],
+    pgn:"1.d4 Nf6 2.c4 g6 3.Nc3 Bg7", chesscom:"Kings-Indian-Defense",
+    steps:[
+      [START_FEN, null, "Posició inicial"],
+      ["rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR","d2d4","1.d4"],
+      ["rnbqkb1r/pppppppp/5n2/8/3P4/8/PPP1PPPP/RNBQKBNR","g8f6","1...Cf6"],
+      ["rnbqkb1r/pppppppp/5n2/8/2PP4/8/PP2PPPP/RNBQKBNR","c2c4","2.c4"],
+      ["rnbqkb1r/pppppp1p/5np1/8/2PP4/8/PP2PPPP/RNBQKBNR","g7g6","2...g6"],
+      ["rnbqkb1r/pppppp1p/5np1/8/2PP4/2N5/PP2PPPP/R1BQKBNR","b1c3","3.Cc3"],
+      ["rnbqk2r/ppppppbp/5np1/8/2PP4/2N5/PP2PPPP/R1BQKBNR","f8g7","3...Ag7"]
+    ],
+    arrows:[["g7","c3","#48bb78","Alfil en fianchetto: gran diagonal"]]
+  },
+  { id:"siciliana", name:"Defensa Siciliana", moves:"1.e4 c5", level:"avancat",
+    fen:"rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR", lastMove:["c7","c5"],
+    pgn:"1.e4 c5", chesscom:"Sicilian-Defense",
+    steps:[
+      [START_FEN, null, "Posició inicial"],
+      ["rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR","e2e4","1.e4"],
+      ["rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR","c7c5","1...c5"]
+    ],
+    arrows:[["c5","d4","#48bb78","Lluita pel control de d4"]]
+  },
+  { id:"ruylopez", name:"Ruy López", moves:"1.e4 e5 2.Cf3 Cc6 3.Ab5", level:"avancat",
+    fen:"r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R", lastMove:["f1","b5"],
+    pgn:"1.e4 e5 2.Nf3 Nc6 3.Bb5", chesscom:"Ruy-Lopez-Opening",
+    steps:[
+      [START_FEN, null, "Posició inicial"],
+      ["rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR","e2e4","1.e4"],
+      ["rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR","e7e5","1...e5"],
+      ["rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R","g1f3","2.Cf3"],
+      ["r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R","b8c6","2...Cc6"],
+      ["r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R","f1b5","3.Ab5"]
+    ],
+    arrows:[["b5","c6","#fc8181","Pressiona el cavall defensor"]]
+  },
+  { id:"grunfeld", name:"Defensa Grünfeld", moves:"1.d4 Cf6 2.c4 g6 3.Cc3 d5", level:"avancat",
+    fen:"rnbqkb1r/ppp1pp1p/5np1/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR", lastMove:["d7","d5"],
+    pgn:"1.d4 Nf6 2.c4 g6 3.Nc3 d5", chesscom:"Grunfeld-Defense",
+    steps:[
+      [START_FEN, null, "Posició inicial"],
+      ["rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR","d2d4","1.d4"],
+      ["rnbqkb1r/pppppppp/5n2/8/3P4/8/PPP1PPPP/RNBQKBNR","g8f6","1...Cf6"],
+      ["rnbqkb1r/pppppppp/5n2/8/2PP4/8/PP2PPPP/RNBQKBNR","c2c4","2.c4"],
+      ["rnbqkb1r/pppppp1p/5np1/8/2PP4/8/PP2PPPP/RNBQKBNR","g7g6","2...g6"],
+      ["rnbqkb1r/pppppp1p/5np1/8/2PP4/2N5/PP2PPPP/R1BQKBNR","b1c3","3.Cc3"],
+      ["rnbqkb1r/ppp1pp1p/5np1/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR","d7d5","3...d5"]
+    ],
+    arrows:[["d5","c4","#fc8181","Contragolp al centre"]]
+  },
+  { id:"nimzo", name:"Defensa Nimzo-Índia", moves:"1.d4 Cf6 2.c4 e6 3.Cc3 Ab4", level:"avancat",
+    fen:"rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2N5/PP2PPPP/R1BQKBNR", lastMove:["f8","b4"],
+    pgn:"1.d4 Nf6 2.c4 e6 3.Nc3 Bb4", chesscom:"Nimzo-Indian-Defense",
+    steps:[
+      [START_FEN, null, "Posició inicial"],
+      ["rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR","d2d4","1.d4"],
+      ["rnbqkb1r/pppppppp/5n2/8/3P4/8/PPP1PPPP/RNBQKBNR","g8f6","1...Cf6"],
+      ["rnbqkb1r/pppppppp/5n2/8/2PP4/8/PP2PPPP/RNBQKBNR","c2c4","2.c4"],
+      ["rnbqkb1r/pppp1ppp/4pn2/8/2PP4/8/PP2PPPP/RNBQKBNR","e7e6","2...e6"],
+      ["rnbqkb1r/pppp1ppp/4pn2/8/2PP4/2N5/PP2PPPP/R1BQKBNR","b1c3","3.Cc3"],
+      ["rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2N5/PP2PPPP/R1BQKBNR","f8b4","3...Ab4"]
+    ],
+    arrows:[["b4","c3","#fc8181","Clava el cavall"]]
+  },
 ];
 
 const LEVEL_LABELS = { principiant: "Principiant", intermedi: "Intermedi", avancat: "Avançat" };
 const FILTERS = ["totes","principiant","intermedi","avancat"];
 const FILTER_LABELS = { totes:"Totes", principiant:"Principiant", intermedi:"Intermedi", avancat:"Avançat" };
 
-// SVG chess pieces (Wikimedia Commons cburnett style, public domain)
 const PIECE_SVG = {
   'K': `<svg viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 11.63V6M20 8h5" stroke-linejoin="miter"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#fff" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-3.5-7.5-13-10.5-16-4-3 6 5 10 5 10V37z" fill="#fff"/><path d="M11.5 30c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0"/></g></svg>`,
   'Q': `<svg viewBox="0 0 45 45"><g fill="#fff" fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0zm16.5-4.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0zm-16 0a2 2 0 1 1-4 0 2 2 0 1 1 4 0zm32 0a2 2 0 1 1-4 0 2 2 0 1 1 4 0zm-16 0a2 2 0 1 1-4 0 2 2 0 1 1 4 0z"/><path d="M9 26c8.5-1.5 21-1.5 27 0l2-12-7 11V11l-5.5 13.5-3-15-3 15L14 11v14L7 14l2 12z" stroke-linecap="butt"/><path d="M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z" stroke-linecap="butt"/><path d="M11.5 30c3.5-1 18.5-1 22 0M12 33.5c6-1 15-1 21 0" fill="none"/></g></svg>`,
@@ -361,21 +629,31 @@ const PIECE_SVG = {
   'p': `<svg viewBox="0 0 45 45"><path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03C15.41 27.09 11 31.58 11 39.5H34c0-7.92-4.41-12.41-7.41-13.47C28.06 24.84 29 23.03 29 21c0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#000" stroke="#000" stroke-width="1.5" stroke-linecap="round"/></svg>`,
 };
 
+const PIECE_UNICODE = {
+  'K':'♔','Q':'♕','R':'♖','B':'♗','N':'♘','P':'♙',
+  'k':'♚','q':'♛','r':'♜','b':'♝','n':'♞','p':'♟'
+};
+
 let activeFilter = "totes";
 let activeOpening = null;
 let aiCache = {};
 let currentAbort = null;
 
-// --- Chess board renderer ---
+// --- Playback state ---
+let playTimer = null;
+let currentStepIdx = 0;
+let currentOpeningData = null;
+let showArrows = true;
+
+// --- Board rendering ---
 function renderBoard(fen, lastMove) {
   const rows = fen.split('/');
   let html = '';
   const lmSquares = lastMove ? lastMove.map(sq => {
-    const col = sq.charCodeAt(0) - 97; // a=0
-    const row = 8 - parseInt(sq[1]);    // 8=0, 1=7
+    const col = sq.charCodeAt(0) - 97;
+    const row = 8 - parseInt(sq[1]);
     return row * 8 + col;
   }) : [];
-
   for (let r = 0; r < 8; r++) {
     let col = 0;
     for (const ch of rows[r]) {
@@ -396,7 +674,132 @@ function renderBoard(fen, lastMove) {
       }
     }
   }
-  return `<div class="chess-board">${html}</div>`;
+  return html;
+}
+
+function renderMiniBoard(fen) {
+  const rows = fen.split('/');
+  let html = '<div class="mini-board">';
+  for (let r = 0; r < 8; r++) {
+    let col = 0;
+    for (const ch of rows[r]) {
+      if (ch >= '1' && ch <= '8') {
+        for (let i = 0; i < parseInt(ch); i++) {
+          html += `<div class="mini-sq ${(r+col)%2===0?'l':'d'}"></div>`;
+          col++;
+        }
+      } else {
+        html += `<div class="mini-sq ${(r+col)%2===0?'l':'d'}">${PIECE_UNICODE[ch]||''}</div>`;
+        col++;
+      }
+    }
+  }
+  return html + '</div>';
+}
+
+// --- Arrow rendering ---
+function sqToCoord(sq) {
+  const col = sq.charCodeAt(0) - 97;
+  const row = 8 - parseInt(sq[1]);
+  return { x: col * 100 + 50, y: row * 100 + 50 };
+}
+
+function renderArrowsSVG(arrows) {
+  let svg = '';
+  for (const [fromSq, toSq, color] of arrows) {
+    const from = sqToCoord(fromSq);
+    const to = sqToCoord(toSq);
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    if (len === 0) continue;
+    const ux = dx/len, uy = dy/len;
+    const sx = from.x + ux * 25, sy = from.y + uy * 25;
+    const ex = to.x - ux * 25, ey = to.y - uy * 25;
+    const headLen = 22, headW = 14;
+    const hx = ex - ux * headLen, hy = ey - uy * headLen;
+    svg += `<line x1="${sx}" y1="${sy}" x2="${hx}" y2="${hy}" stroke="${color}" stroke-width="14" stroke-linecap="round" opacity="0.7"/>`;
+    svg += `<polygon points="${ex},${ey} ${hx-uy*headW},${hy+ux*headW} ${hx+uy*headW},${hy-ux*headW}" fill="${color}" opacity="0.7"/>`;
+  }
+  return svg;
+}
+
+// --- Playback ---
+function updateBoard() {
+  if (!currentOpeningData) return;
+  const steps = currentOpeningData.steps;
+  const step = steps[currentStepIdx];
+  const fen = step[0];
+  const move = step[1];
+  const lastMove = move ? [move.slice(0,2), move.slice(2,4)] : null;
+
+  const boardEl = document.getElementById('anim-board');
+  if (boardEl) boardEl.innerHTML = renderBoard(fen, lastMove);
+
+  const arrowEl = document.getElementById('arrow-svg');
+  if (arrowEl) {
+    const isLast = currentStepIdx === steps.length - 1;
+    if (isLast && showArrows && currentOpeningData.arrows) {
+      arrowEl.innerHTML = renderArrowsSVG(currentOpeningData.arrows);
+      arrowEl.classList.add('visible');
+    } else {
+      arrowEl.innerHTML = '';
+      arrowEl.classList.remove('visible');
+    }
+  }
+
+  // Update controls
+  const infoEl = document.getElementById('step-info');
+  if (infoEl) infoEl.textContent = `${currentStepIdx} / ${steps.length - 1}`;
+
+  const playBtn = document.getElementById('play-btn');
+  if (playBtn) playBtn.textContent = playTimer ? '⏸' : '▶';
+
+  document.getElementById('btn-prev')?.toggleAttribute('disabled', currentStepIdx <= 0);
+  document.getElementById('btn-start')?.toggleAttribute('disabled', currentStepIdx <= 0);
+  document.getElementById('btn-next')?.toggleAttribute('disabled', currentStepIdx >= steps.length - 1);
+  document.getElementById('btn-end')?.toggleAttribute('disabled', currentStepIdx >= steps.length - 1);
+
+  // Update move list
+  document.querySelectorAll('.move-badge').forEach((el, i) => {
+    el.classList.toggle('active', i === currentStepIdx);
+  });
+}
+
+function goToStep(n) {
+  if (!currentOpeningData) return;
+  currentStepIdx = Math.max(0, Math.min(n, currentOpeningData.steps.length - 1));
+  updateBoard();
+}
+
+function nextStep() { goToStep(currentStepIdx + 1); }
+function prevStep() { goToStep(currentStepIdx - 1); }
+function goToStart() { stopPlay(); goToStep(0); }
+function goToEnd() { stopPlay(); goToStep(currentOpeningData ? currentOpeningData.steps.length - 1 : 0); }
+
+function startPlay() {
+  if (playTimer || !currentOpeningData) return;
+  if (currentStepIdx >= currentOpeningData.steps.length - 1) currentStepIdx = 0;
+  playTimer = setInterval(() => {
+    if (currentStepIdx >= currentOpeningData.steps.length - 1) { stopPlay(); return; }
+    currentStepIdx++;
+    updateBoard();
+  }, 900);
+  updateBoard();
+}
+
+function stopPlay() {
+  if (playTimer) { clearInterval(playTimer); playTimer = null; }
+  updateBoard();
+}
+
+function togglePlay() {
+  if (playTimer) stopPlay(); else startPlay();
+}
+
+function toggleArrowsVisibility() {
+  showArrows = document.getElementById('show-arrows')?.checked ?? true;
+  updateBoard();
 }
 
 // --- Render tabs ---
@@ -424,13 +827,17 @@ const gridEl = document.getElementById("grid");
 function renderGrid() {
   gridEl.innerHTML = "";
   const filtered = activeFilter === "totes" ? OPENINGS : OPENINGS.filter(o => o.level === activeFilter);
-  filtered.forEach(o => {
+  filtered.forEach((o, idx) => {
     const card = document.createElement("div");
     card.className = "opening-card" + (activeOpening === o.id ? " active" : "");
+    card.style.animationDelay = (idx * 0.06) + 's';
     card.innerHTML = `
-      <div class="name">${o.name}</div>
-      <div class="moves">${o.moves}</div>
-      <span class="badge ${o.level}">${LEVEL_LABELS[o.level]}</span>
+      <div class="card-info">
+        <div class="name">${o.name}</div>
+        <div class="moves">${o.moves}</div>
+        <span class="badge ${o.level}">${LEVEL_LABELS[o.level]}</span>
+      </div>
+      ${renderMiniBoard(o.fen)}
     `;
     card.onclick = () => selectOpening(o);
     gridEl.appendChild(card);
@@ -445,13 +852,24 @@ function selectOpening(o) {
     closePanel();
     return;
   }
+  stopPlay();
   activeOpening = o.id;
+  currentOpeningData = o;
+  currentStepIdx = 0;
   renderGrid();
 
   const encodedPgn = encodeURIComponent(o.pgn);
   const lichessUrl = `https://lichess.org/analysis/pgn/${encodedPgn}`;
   const chesscomUrl = `https://www.chess.com/openings/${o.chesscom}`;
   const ytSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(o.name + ' chess opening')}`;
+
+  const moveListHtml = o.steps.map((s, i) =>
+    `<span class="move-badge${i===0?' active':''}" onclick="goToStep(${i})">${s[2]}</span>`
+  ).join('');
+
+  const arrowLegendHtml = (o.arrows || []).map(a =>
+    `<span class="arrow-legend-item"><span class="arrow-legend-dot" style="background:${a[2]}"></span>${a[3]}</span>`
+  ).join('');
 
   detailEl.innerHTML = `
     <div class="detail-header">
@@ -464,9 +882,27 @@ function selectOpening(o) {
     <div class="detail-body">
       <div class="embeds-row">
         <div class="embed-block">
-          <h3>Posició resultant</h3>
-          ${renderBoard(o.fen, o.lastMove)}
-          <div style="margin-top:8px;font-size:0.82rem;color:#718096;font-family:monospace;">${o.moves}</div>
+          <h3>Reproducció de l'obertura</h3>
+          <div class="board-wrapper">
+            <div class="chess-board" id="anim-board"></div>
+            <svg class="arrow-overlay" id="arrow-svg" viewBox="0 0 800 800"></svg>
+          </div>
+          <div class="player-controls">
+            <button class="ctrl-btn" id="btn-start" onclick="goToStart()" title="Inici">⏮</button>
+            <button class="ctrl-btn" id="btn-prev" onclick="prevStep()" title="Anterior">◁</button>
+            <button class="ctrl-btn play-btn" id="play-btn" onclick="togglePlay()" title="Reproduir">▶</button>
+            <button class="ctrl-btn" id="btn-next" onclick="nextStep()" title="Següent">▷</button>
+            <button class="ctrl-btn" id="btn-end" onclick="goToEnd()" title="Final">⏭</button>
+            <span class="step-info" id="step-info">0 / ${o.steps.length - 1}</span>
+          </div>
+          <div class="move-list">${moveListHtml}</div>
+          ${o.arrows && o.arrows.length ? `
+          <label class="arrow-toggle">
+            <input type="checkbox" id="show-arrows" ${showArrows?'checked':''} onchange="toggleArrowsVisibility()">
+            Fletxes estratègiques
+          </label>
+          <div class="arrow-legend">${arrowLegendHtml}</div>
+          ` : ''}
         </div>
         <div class="embed-block">
           <h3>Recursos externs</h3>
@@ -498,13 +934,19 @@ function selectOpening(o) {
     </div>
   `;
   detailEl.classList.add("open");
-  detailEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
+  updateBoard();
+
+  setTimeout(() => startPlay(), 600);
+
+  detailEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
   fetchAI(o);
 }
 
 function closePanel() {
+  stopPlay();
   activeOpening = null;
+  currentOpeningData = null;
   detailEl.classList.remove("open");
   renderGrid();
   if (currentAbort) { currentAbort.abort(); currentAbort = null; }
@@ -583,6 +1025,9 @@ async function generatePDF(openingId) {
   const o = OPENINGS.find(x => x.id === openingId);
   if (!o) return;
 
+  stopPlay();
+  goToEnd();
+
   const btn = document.getElementById("pdf-btn");
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="pdf-ico">&#9203;</span> Generant PDF...'; }
 
@@ -595,49 +1040,40 @@ async function generatePDF(openingId) {
     const CW = W - ML - MR;
     let y = MT;
 
-    // --- Colors ---
     const NAVY = [26, 54, 93];
     const DARK = [30, 30, 40];
     const GRAY = [100, 110, 130];
     const LIGHT_BG = [245, 246, 250];
     const levelColors = { principiant: [56,161,105], intermedi: [221,107,32], avancat: [197,48,48] };
 
-    // --- Helper: rounded rect ---
     function roundRect(x, y, w, h, r, fillColor) {
       doc.setFillColor(...fillColor);
       doc.roundedRect(x, y, w, h, r, r, 'F');
     }
 
-    // --- Helper: clean text for jsPDF (no unicode issues) ---
     function cleanForPDF(text) {
       return text
-        // Replace typographic chars with ASCII equivalents
-        .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
-        .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
-        .replace(/\u2013/g, '-')
-        .replace(/\u2014/g, '-')
-        .replace(/\u2026/g, '...')
-        .replace(/\u00A0/g, ' ')
-        // Remove emoji and special symbols (original)
-        .replace(/[\u2728\u2694\u2713\u2714\u2022\u25CF\u25CB\u2605\u2606\u270F\u2764\u2B50\u26A0\u2139\u27A1\u2192\u2190\u2191\u2193]/g, '')
+        .replace(/[‘’‚‛]/g, "'")
+        .replace(/[“”„‟]/g, '"')
+        .replace(/–/g, '-')
+        .replace(/—/g, '-')
+        .replace(/…/g, '...')
+        .replace(/ /g, ' ')
+        .replace(/[✨⚔✓✔•●○★☆✏❤⭐⚠ℹ➡→←↑↓]/g, '')
         .replace(/\ud83c[\udc00-\udfff]|\ud83d[\udc00-\udeff]|\ud83e[\udc00-\udfff]/g, '')
         .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
-        // Strip ALL remaining non-Latin-1 characters (jsPDF Helvetica only supports U+0000-U+00FF)
         .replace(/[^\x00-\xFF]/g, '')
         .trim();
     }
 
-    // --- Helper: render rich text with bold (**text**) support ---
     function renderRichText(rawText, startX, maxW, fontSize, color, lineH) {
       const cleaned = cleanForPDF(rawText);
-      // Split into lines first
       const rawLines = cleaned.split('\n');
       const lh = lineH || fontSize * 0.45;
 
       for (const rawLine of rawLines) {
         if (!rawLine.trim()) { y += lh * 0.5; continue; }
 
-        // Parse **bold** segments: split line into [{text, bold}]
         const segments = [];
         const re = /\*\*(.+?)\*\*/g;
         let lastIdx = 0, m;
@@ -648,16 +1084,13 @@ async function generatePDF(openingId) {
         }
         if (lastIdx < rawLine.length) segments.push({ text: rawLine.slice(lastIdx), bold: false });
 
-        // Replace bullet chars with dash (expanded detection)
         if (segments.length && /^[\s]*[-•◦▸▪▶◆‣⁃○●*]/.test(segments[0].text)) {
           segments[0].text = segments[0].text.replace(/^[\s]*[-•◦▸▪▶◆‣⁃○●*]\s*/, '  - ');
         }
 
-        // Flatten segments into wrapped lines, tracking bold ranges
         const fullText = segments.map(s => s.text).join('');
         const wrappedLines = doc.splitTextToSize(fullText, maxW);
 
-        // Build a map: character index -> bold?
         const boldMap = [];
         let ci = 0;
         for (const seg of segments) {
@@ -670,9 +1103,7 @@ async function generatePDF(openingId) {
         for (const wLine of wrappedLines) {
           if (y > H - 20) { doc.addPage(); y = MT; }
 
-          // Find segments within this wrapped line
           const lineSegs = [];
-          let pos = 0;
           let currentBold = boldMap[charOffset] || false;
           let currentText = '';
 
@@ -688,7 +1119,6 @@ async function generatePDF(openingId) {
           }
           if (currentText) lineSegs.push({ text: currentText, bold: currentBold });
 
-          // Render segments inline
           let cx = startX;
           for (const seg of lineSegs) {
             doc.setFont('helvetica', seg.bold ? 'bold' : 'normal');
@@ -699,7 +1129,6 @@ async function generatePDF(openingId) {
           }
 
           charOffset += wLine.length;
-          // skip whitespace that was used as line break
           while (charOffset < boldMap.length && fullText[charOffset] === ' ') charOffset++;
           y += lh;
         }
@@ -707,34 +1136,26 @@ async function generatePDF(openingId) {
       return y;
     }
 
-    // ============================================================
-    // HEADER BAR
-    // ============================================================
     roundRect(0, 0, W, 42, 0, NAVY);
 
-    // Chess icon (use safe char)
     doc.setFontSize(14);
     doc.setTextColor(255, 215, 0);
     doc.text('*', ML + 2, 17);
 
-    // Title
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(20);
     doc.text("FITXA D'OBERTURA", ML + 14, 17);
 
-    // Subtitle
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     doc.setTextColor(200, 210, 230);
     doc.text("Apren Obertures d'Escacs - Material Didactic", ML + 14, 25);
 
-    // Opening name
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(16);
     doc.setTextColor(255, 215, 0);
     doc.text(o.name, ML, 37);
 
-    // Level badge
     const lvlColor = levelColors[o.level] || GRAY;
     const lvlText = LEVEL_LABELS[o.level];
     const lvlW = doc.getTextWidth(lvlText) + 10;
@@ -746,9 +1167,6 @@ async function generatePDF(openingId) {
 
     y = 52;
 
-    // ============================================================
-    // CHESS BOARD (captured from DOM)
-    // ============================================================
     const boardEl = document.querySelector('.chess-board');
     let boardImgData = null;
     if (boardEl) {
@@ -766,19 +1184,14 @@ async function generatePDF(openingId) {
     const infoW = CW - boardSize - 12;
 
     if (boardImgData) {
-      // Board border
       doc.setDrawColor(...NAVY);
       doc.setLineWidth(0.5);
       doc.rect(boardX - 0.5, y - 0.5, boardSize + 1, boardSize + 1);
       doc.addImage(boardImgData, 'PNG', boardX, y, boardSize, boardSize);
     }
 
-    // ============================================================
-    // INFO SIDEBAR (right of board)
-    // ============================================================
     let iy = y + 2;
 
-    // Moviments section
     roundRect(infoX, iy, infoW, 28, 4, LIGHT_BG);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
@@ -792,7 +1205,6 @@ async function generatePDF(openingId) {
 
     iy += 34;
 
-    // Level & category
     roundRect(infoX, iy, infoW, 22, 4, LIGHT_BG);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
@@ -803,7 +1215,6 @@ async function generatePDF(openingId) {
     doc.setTextColor(...lvlColor);
     doc.text(lvlText, infoX + 6, iy + 16);
 
-    // Difficulty dots
     const dots = o.level === 'principiant' ? 1 : o.level === 'intermedi' ? 2 : 3;
     for (let i = 0; i < 3; i++) {
       const dotColor = i < dots ? lvlColor : [210, 215, 225];
@@ -813,7 +1224,6 @@ async function generatePDF(openingId) {
 
     iy += 28;
 
-    // Resources box
     roundRect(infoX, iy, infoW, 28, 4, LIGHT_BG);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
@@ -832,18 +1242,11 @@ async function generatePDF(openingId) {
 
     y = Math.max(y + boardSize + 8, iy + 36);
 
-    // ============================================================
-    // DECORATIVE SEPARATOR
-    // ============================================================
     doc.setDrawColor(...NAVY);
     doc.setLineWidth(0.8);
     doc.line(ML, y, ML + CW, y);
     y += 8;
 
-    // ============================================================
-    // AI EXPLANATION SECTION
-    // ============================================================
-    // Section header
     roundRect(ML, y, CW, 10, 3, NAVY);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
@@ -851,15 +1254,11 @@ async function generatePDF(openingId) {
     doc.text('EXPLICACIO DIDACTICA', ML + 6, y + 7);
     y += 16;
 
-    // AI content (with bold markdown support)
     const aiText = aiCache[o.id] || "(Genera l'explicacio prement sobre l'obertura i espera que finalitzi la IA abans de descarregar el PDF)";
     y = renderRichText(aiText, ML + 2, CW - 4, 10, DARK, 5);
 
     y += 8;
 
-    // ============================================================
-    // KEY CONCEPTS BOX
-    // ============================================================
     if (y < H - 60) {
       roundRect(ML, y, CW, 10, 3, [245, 240, 230]);
       doc.setFont('helvetica', 'bold');
@@ -886,9 +1285,6 @@ async function generatePDF(openingId) {
       }
     }
 
-    // ============================================================
-    // FOOTER
-    // ============================================================
     const footY = H - 12;
     doc.setDrawColor(200, 205, 215);
     doc.setLineWidth(0.3);
@@ -900,7 +1296,6 @@ async function generatePDF(openingId) {
     doc.text("Generat des de Apren Obertures d'Escacs - apps.xroig.cat", ML, footY);
     doc.text(new Date().toLocaleDateString('ca-ES', { year:'numeric', month:'long', day:'numeric' }), W - MR, footY, { align: 'right' });
 
-    // Save
     doc.save(`obertura_${o.id}.pdf`);
 
   } catch (err) {
@@ -914,7 +1309,6 @@ async function generatePDF(openingId) {
 // Init
 renderGrid();
 
-// Adjust nav links for local vs remote
 (() => {
     const isLocal = ['localhost','127.0.0.1'].includes(location.hostname);
     document.querySelectorAll('[data-local][data-remote]').forEach(a => {
